@@ -195,11 +195,18 @@ async function startTranslation() {
       body: formData
     });
 
-    const result = await res.json();
+    let result;
+    const rawText = await res.text();
+    try {
+      result = JSON.parse(rawText);
+    } catch (e) {
+      throw new Error(rawText || "Server error");
+    }
 
     if (!res.ok || !result.success) {
-      throw new Error(result.error || "Translation failed. Check Chrome connection.");
+      throw new Error(result.error || "Translation failed.");
     }
+
 
     addLog("4. Translation finished! Rendering comparison.");
     updateProgress(100, "Complete!");

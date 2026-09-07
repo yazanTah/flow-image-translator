@@ -109,15 +109,32 @@ async def translate_image_flow(
             browser = await p.chromium.connect_over_cdp(CDP_URL)
             page = await get_or_create_flow_page(browser)
 
-            # Wait a moment for page readiness
-            await page.wait_for_load_state("domcontentloaded")
-            await asyncio.sleep(1.0)
+            # Check if user needs to sign in or navigate into the workspace
+            curr_url = page.url.lower()
+            if "accounts.google.com" in curr_url or "signin" in curr_url:
+                return {
+                    "success": False,
+                    "error": "Google Sign-In required: Please sign into your Google account in the open Brave window, then click Translate again!"
+                }
+
+            # If on the public marketing landing page, try to enter the workspace
+            if "Create with Google Flow" in await page.evaluate("() => document.body.innerText"):
+                create_btn = page.get_by_role("button", name="Create with Google Flow").first
+                if await create_btn.count() > 0:
+                    logger.info("Clicking 'Create with Google Flow' to enter workspace...")
+                    await create_btn.click()
+                    await page.wait_for_timeout(3000)
+                    if "accounts.google.com" in page.url.lower():
+                        return {
+                            "success": False,
+                            "error": "Please sign into your Google account in the open Brave window!"
+                        }
 
             # 1. Attach the image file
             logger.info(f"Attaching image: {abs_image_path}")
-            # Locate file input element on page
             file_input = page.locator('input[type="file"]')
             file_input_count = await file_input.count()
+
             
             if file_input_count > 0:
                 await file_input.first.set_input_files(abs_image_path)

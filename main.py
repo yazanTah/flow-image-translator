@@ -127,7 +127,7 @@ async def translate_image(
     )
 
     if not result.get("success"):
-        return JSONResponse(status_code=500, content=result)
+        return JSONResponse(status_code=400, content={"success": False, "error": result.get("error", "Unknown error")})
 
     result["input_url"] = f"/uploads/{safe_name}"
     result["output_url"] = f"/outputs/{result['output_filename']}"
