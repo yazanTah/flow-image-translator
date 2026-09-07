@@ -325,7 +325,7 @@ function closeSetupModal() {
 }
 
 function copyLaunchCommand() {
-  const cmd = `& "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\\chrome-flow-profile"`;
+  const cmd = `& "C:\\Program Files\\BraveSoftware\\Brave-Browser\\Application\\brave.exe" --remote-debugging-port=9222 --user-data-dir="C:\\brave-flow-profile"`;
   navigator.clipboard.writeText(cmd);
   alert("Command copied to clipboard! Paste it into PowerShell.");
 }
@@ -334,13 +334,14 @@ async function launchChrome() {
   const btn = document.getElementById("launchChromeBtn");
   btn.textContent = "Launching...";
   try {
-    const res = await fetch("/api/launch-chrome", { method: "POST" });
+    const res = await fetch("/api/launch-browser", { method: "POST" });
     const data = await res.json();
-    alert(data.message || "Chrome launched! Check your taskbar.");
+    alert(data.message || "Browser launched! Check your taskbar.");
     setTimeout(checkStatus, 2000);
   } catch (e) {
-    alert("Could not automatically launch Chrome. Please run the PowerShell command manually.");
+    alert("Could not automatically launch browser. Please run the PowerShell command manually.");
   } finally {
-    btn.textContent = "🚀 1-Click Launch Chrome";
+    btn.textContent = "🚀 1-Click Launch Brave";
   }
 }
+

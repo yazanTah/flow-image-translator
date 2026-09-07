@@ -26,17 +26,18 @@
 
 ## 🛠️ Quick Start Guide
 
-### 1. Launch Chrome with Remote Debugging (One-time Setup)
+### 1. Launch Brave with Remote Debugging (One-time Setup)
 Run this command in **PowerShell**:
 
 ```powershell
-& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\chrome-flow-profile"
+& "C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe" --remote-debugging-port=9222 --user-data-dir="C:\brave-flow-profile"
 ```
+*(Or double-click `launch_brave.bat`)*
 
-1. In the Chrome window that opens, visit [labs.google/fx/tools/flow](https://labs.google/fx/tools/flow).
+1. In the Brave window that opens, visit [labs.google/fx/tools/flow](https://labs.google/fx/tools/flow).
 2. Sign in with your Google account.
 3. Select **Nano Banana Pro** as your default image model.
-4. Minimize Chrome — it runs in the background.
+4. Minimize Brave — it runs silently in the background.
 
 ---
 

@@ -46,34 +46,39 @@ async def get_status():
     return JSONResponse(content=status)
 
 @app.post("/api/launch-chrome")
-async def launch_chrome():
-    """Convenience endpoint to launch Chrome with remote debugging enabled."""
+@app.post("/api/launch-browser")
+async def launch_browser():
+    """Convenience endpoint to launch Brave or Chrome with remote debugging enabled."""
     status = check_cdp_status()
     if status["connected"]:
-        return {"success": True, "message": "Chrome is already connected."}
+        return {"success": True, "message": "Browser is already connected on port 9222."}
 
-    # Possible Chrome executable locations on Windows
-    chrome_paths = [
-        Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+    # Browser executable candidates (Brave prioritized)
+    browser_paths = [
+        Path(r"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe"),
+        Path(os.path.expandvars(r"%LOCALAPPDATA%\BraveSoftware\Brave-Browser\Application\brave.exe")),
+        Path(r"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe"),
         Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+        Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
         Path(os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"))
     ]
 
-    chrome_bin = None
-    for p in chrome_paths:
+    browser_bin = None
+    for p in browser_paths:
         if p.exists():
-            chrome_bin = p
+            browser_bin = p
             break
 
-    if not chrome_bin:
+    if not browser_bin:
         raise HTTPException(
             status_code=404,
-            detail="Google Chrome installation not found in standard paths."
+            detail="Neither Brave nor Chrome was found in standard installation paths."
         )
 
-    profile_dir = Path("C:/chrome-flow-profile")
+    is_brave = "brave" in str(browser_bin).lower()
+    profile_dir = Path("C:/brave-flow-profile" if is_brave else "C:/chrome-flow-profile")
     cmd = [
-        str(chrome_bin),
+        str(browser_bin),
         "--remote-debugging-port=9222",
         f"--user-data-dir={profile_dir}",
         "https://labs.google/fx/tools/flow"
@@ -81,12 +86,14 @@ async def launch_chrome():
 
     try:
         subprocess.Popen(cmd, shell=False)
+        name = "Brave" if is_brave else "Chrome"
         return {
             "success": True,
-            "message": "Chrome launched successfully on port 9222. Sign into Google Flow if prompted."
+            "message": f"{name} launched successfully on port 9222. Sign into Google Flow if prompted."
         }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to launch Chrome: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to launch browser: {str(e)}")
+
 
 @app.post("/api/translate")
 async def translate_image(
