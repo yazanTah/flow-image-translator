@@ -1,0 +1,13 @@
+﻿__pycache__/
+*.py[cod]
+*.class
+venv/
+env/
+.env
+uploads/
+outputs/
+.pytest_cache/
+*.log
+chrome-flow-profile/
+.vscode/
+.idea/

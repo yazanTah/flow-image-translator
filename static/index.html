@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Nano Banana Pro — In-Image Translator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <!-- Navigation Header -->
+    <header class="navbar">
+      <div class="brand">
+        <div class="logo-icon">🍌</div>
+        <div class="brand-text">
+          <h1>Nano Banana Pro</h1>
+          <span class="badge-tag">Image Translator · Google Flow</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <div id="statusBadge" class="status-badge offline" onclick="openSetupModal()">
+          <span class="status-dot"></span>
+          <span id="statusText">Checking Chrome...</span>
+        </div>
+        <button class="btn btn-outline btn-sm" onclick="openSetupModal()">Setup Guide</button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="main-content">
+      <!-- Left Panel: Upload & Controls -->
+      <section class="panel control-panel">
+        <div class="panel-header">
+          <h2>1. Source Image</h2>
+          <span class="helper-text">Supports Manga, Posters, UI, Packaging</span>
+        </div>
+
+        <!-- Dropzone -->
+        <div id="dropzone" class="dropzone">
+          <input type="file" id="fileInput" accept="image/png,image/jpeg,image/webp,image/jpg" />
+          <div id="dropzoneEmpty" class="dropzone-empty">
+            <div class="upload-icon">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+            </div>
+            <p class="dropzone-title">Drop your image here, or <span>browse</span></p>
+            <span class="dropzone-hint">PNG, JPG, or WEBP up to 25MB</span>
+          </div>
+
+          <div id="dropzonePreview" class="dropzone-preview hidden">
+            <img id="sourcePreviewImg" src="" alt="Source preview" />
+            <button id="removeFileBtn" class="btn-remove" title="Remove file">✕</button>
+            <div class="file-meta">
+              <span id="fileName">image.png</span>
+              <span id="fileSize">1.2 MB</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Translation Options -->
+        <div class="panel-header mt-4">
+          <h2>2. Translation Options</h2>
+        </div>
+
+        <div class="form-group">
+          <label for="targetLang">Target Language</label>
+          <select id="targetLang" class="form-select">
+            <option value="English" selected>English</option>
+            <option value="Spanish">Spanish (Español)</option>
+            <option value="Japanese">Japanese (日本語)</option>
+            <option value="Korean">Korean (한국어)</option>
+            <option value="French">French (Français)</option>
+            <option value="German">German (Deutsch)</option>
+            <option value="Chinese (Simplified)">Chinese Simplified (简体中文)</option>
+            <option value="Arabic">Arabic (العربية)</option>
+            <option value="Russian">Russian (Русский)</option>
+            <option value="Portuguese">Portuguese (Português)</option>
+            <option value="Italian">Italian (Italiano)</option>
+            <option value="custom">Other (Specify below)...</option>
+          </select>
+        </div>
+
+        <div id="customLangGroup" class="form-group hidden">
+          <label for="customLang">Specify Language</label>
+          <input type="text" id="customLang" class="form-input" placeholder="e.g., Latin, Swedish, Polish" />
+        </div>
+
+        <!-- Style Preservation Checkboxes -->
+        <div class="checkbox-group">
+          <label class="custom-checkbox">
+            <input type="checkbox" id="preserveStyle" checked />
+            <span class="checkmark"></span>
+            <div class="checkbox-label">
+              <strong>Preserve Styling & Typography</strong>
+              <small>Matches original fonts, color palettes, textures and perspective</small>
+            </div>
+          </label>
+        </div>
+
+        <!-- Custom Prompts / Instructions -->
+        <div class="form-group">
+          <label for="customPrompt">
+            Additional Directives <span class="badge-subtle">Optional</span>
+          </label>
+          <textarea id="customPrompt" class="form-textarea" rows="2" placeholder="e.g. Manga text: read speech bubbles right-to-left. Keep brand logos in original language."></textarea>
+        </div>
+
+        <!-- Model Indicator Notice -->
+        <div class="model-badge">
+          <div class="model-info">
+            <span class="badge-gemini">Gemini 3 Pro Image</span>
+            <strong>Nano Banana Pro</strong>
+          </div>
+          <span class="model-tier">0 Flow Video Credits Used · Free Quota</span>
+        </div>
+
+        <!-- Submit Button -->
+        <button id="translateBtn" class="btn btn-primary btn-block" disabled>
+          <span class="btn-text">✨ Translate Image with Flow</span>
+          <span class="btn-spinner hidden"></span>
+        </button>
+
+        <!-- Progress Tracker -->
+        <div id="progressTracker" class="progress-tracker hidden">
+          <div class="progress-header">
+            <span class="progress-label">Processing with Google Flow...</span>
+            <span id="progressPercent" class="progress-percent">Connecting...</span>
+          </div>
+          <div class="progress-bar">
+            <div id="progressBarFill" class="progress-bar-fill"></div>
+          </div>
+          <div id="progressLogs" class="progress-logs">
+            <div class="log-entry">Connecting to Chrome CDP session...</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Panel: Interactive Comparison & Result -->
+      <section class="panel viewer-panel">
+        <div class="panel-header">
+          <h2>3. Translation Result</h2>
+          <div class="viewer-modes">
+            <button id="modeCompare" class="mode-btn active" title="Interactive Split Comparison">Compare</button>
+            <button id="modeSide" class="mode-btn" title="Side by Side">Side by Side</button>
+            <button id="modeResult" class="mode-btn" title="Result Only">Result</button>
+          </div>
+        </div>
+
+        <div class="viewer-container">
+          <!-- Empty Placeholder -->
+          <div id="viewerEmpty" class="viewer-empty">
+            <div class="empty-graphic">
+              <div class="circle-pulse"></div>
+              <span>🍌</span>
+            </div>
+            <h3>No translation yet</h3>
+            <p>Upload an image and hit Translate to preview in-image text translation powered by Nano Banana Pro.</p>
+          </div>
+
+          <!-- Interactive Before / After Split Slider -->
+          <div id="splitViewer" class="split-viewer hidden">
+            <div class="image-wrapper original-wrapper">
+              <img id="splitOriginalImg" src="" alt="Original" />
+              <span class="tag tag-original">Original</span>
+            </div>
+            <div id="splitModifiedWrapper" class="image-wrapper modified-wrapper">
+              <img id="splitResultImg" src="" alt="Translated with Nano Banana Pro" />
+              <span class="tag tag-translated">Nano Banana Pro</span>
+            </div>
+            <div id="sliderHandle" class="slider-handle">
+              <div class="slider-line"></div>
+              <div class="slider-button">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="8 18 2 12 8 6"></polyline>
+                  <polyline points="16 6 22 12 16 18"></polyline>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side-by-Side View -->
+          <div id="sideBySideViewer" class="side-viewer hidden">
+            <div class="side-card">
+              <span class="tag tag-original">Original</span>
+              <img id="sideOriginalImg" src="" alt="Original" />
+            </div>
+            <div class="side-card">
+              <span class="tag tag-translated">Nano Banana Pro</span>
+              <img id="sideResultImg" src="" alt="Translated" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Action Bar for Result -->
+        <div id="viewerActions" class="viewer-actions hidden">
+          <div class="result-details">
+            <span id="resultMeta">Generated with Nano Banana Pro</span>
+          </div>
+          <div class="btn-group">
+            <button id="downloadBtn" class="btn btn-success">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              Download Translated Image
+            </button>
+            <button id="resetBtn" class="btn btn-outline">Translate Another</button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Setup Guide Modal -->
+    <div id="setupModal" class="modal-overlay hidden">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title">
+            <span class="modal-icon">⚡</span>
+            <h3>Connect to Your Google Flow Account</h3>
+          </div>
+          <button class="modal-close" onclick="closeSetupModal()">✕</button>
+        </div>
+
+        <div class="modal-body">
+          <p>
+            To use your <strong>Google Flow subscription for \$0</strong> without paying API middlemen, this app connects to a local Chrome window via DevTools Protocol (CDP).
+          </p>
+
+          <div class="step-card">
+            <div class="step-badge">1</div>
+            <div class="step-content">
+              <strong>Launch Chrome with Debugging Port</strong>
+              <p>Click the button below or copy the command to open an isolated Chrome session:</p>
+              <div class="code-box">
+                <code>& "C:\Program Files\Google\Chrome\Application\chrome.exe" --remote-debugging-port=9222 --user-data-dir="C:\chrome-flow-profile"</code>
+                <button class="btn-copy" onclick="copyLaunchCommand()">Copy</button>
+              </div>
+              <button id="launchChromeBtn" class="btn btn-secondary mt-2" onclick="launchChrome()">
+                🚀 1-Click Launch Chrome
+              </button>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-badge">2</div>
+            <div class="step-content">
+              <strong>Sign into Google Flow</strong>
+              <p>In that newly opened Chrome window, go to <a href="https://labs.google/fx/tools/flow" target="_blank">labs.google/fx/tools/flow</a> and sign in with your Google account.</p>
+            </div>
+          </div>
+
+          <div class="step-card">
+            <div class="step-badge">3</div>
+            <div class="step-content">
+              <strong>All Set!</strong>
+              <p>You can now minimize Chrome. Your translation requests will execute in milliseconds in the background with zero mouse movement.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button class="btn btn-primary" onclick="closeSetupModal()">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
